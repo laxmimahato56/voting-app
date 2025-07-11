@@ -3,15 +3,10 @@ const router = express.Router();
 const User = require("../models/user");
 const { jwtAuthMiddleware, generateToken } = require("../jwt");
 
-// POST route to add a user
 router.post("/signup", async (req, res) => {
   try {
-    const data = req.body; // assuming request body contains user data
-
-    // create a new user document using the mongoose model
+    const data = req.body;
     const newUser = new User(data);
-
-    // save new user to the database
     const response = await newUser.save();
 
     const payload = {
@@ -19,50 +14,42 @@ router.post("/signup", async (req, res) => {
     };
 
     const token = generateToken(payload);
-
-    res.status(200).json({ response, token });
+    res
+      .status(200)
+      .json({ message: "User created successfully", data: response, token });
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-// Login route
 router.post("/login", async (req, res) => {
   try {
-    // extract nidNumber and password from request body
     const { nidNumber, password } = req.body;
-
-    // find the user by nidNumber
     const user = await User.findOne({ nidNumber });
 
-    // if user doesnot exist or password doesn't match, return error
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ error: "Invalid username or password" });
     }
 
-    // generate token
     const payload = {
       id: user.id,
     };
 
     const token = generateToken(payload);
-
-    // return token as response
-    res.status(200).json({ token });
+    res.status(200).json({ message: "User loggedin successfully", token });
   } catch (err) {
     console.log(err);
     res.status(500).json("Internal Server Error");
   }
 });
 
-// Profile route
 router.get("/profile", jwtAuthMiddleware, async (req, res) => {
   try {
     const userData = req.user;
     const userId = userData.id;
     const user = await User.findById(userId);
-    res.status(200).json({ user });
+    res.status(200).json({ message: "User fetched successfully", data: user });
   } catch (err) {
     console.log(err);
     res.status(500).json("Internal Server Error");
@@ -71,8 +58,8 @@ router.get("/profile", jwtAuthMiddleware, async (req, res) => {
 
 router.put("/profile/password", jwtAuthMiddleware, async (req, res) => {
   try {
-    const userId = req.user.id; // Extract the id from the token
-    const { currentPassword, newPassword } = req.body; // Extract current and new passwords from request body
+    const userId = req.user.id;
+    const { currentPassword, newPassword } = req.body;
 
     // Check if currentPassword and newPassword are present in the request body
     if (!currentPassword || !newPassword) {
@@ -81,7 +68,6 @@ router.put("/profile/password", jwtAuthMiddleware, async (req, res) => {
         .json({ error: "Both currentPassword and newPassword are required" });
     }
 
-    // Find the user by userID
     const user = await User.findById(userId);
 
     // If user does not exist or password does not match, return error
@@ -93,7 +79,6 @@ router.put("/profile/password", jwtAuthMiddleware, async (req, res) => {
     user.password = newPassword;
     await user.save();
 
-    console.log("password updated");
     res.status(200).json({ message: "Password updated" });
   } catch (err) {
     console.error(err);

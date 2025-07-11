@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken");
 
 const jwtAuthMiddleware = (req, res, next) => {
-  // first check request headers has authorization or not
   const authorization = req.headers.authorization;
 
   if (!authorization)
@@ -12,10 +11,8 @@ const jwtAuthMiddleware = (req, res, next) => {
   if (!token) return res.status(401).json({ error: "Unauthorized" });
 
   try {
-    // Verify the jwt token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Attach user information to the request object
     req.user = decoded;
     next();
   } catch (err) {

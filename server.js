@@ -8,7 +8,6 @@ app.use(bodyParser.json());
 
 const PORT = process.env.PORT;
 
-// middleware function
 const logRequest = (req, res, next) => {
   console.log(
     `[${new Date().toLocaleString()}]: Request made to ${req.originalUrl}`
@@ -18,7 +17,6 @@ const logRequest = (req, res, next) => {
 
 app.use(logRequest);
 
-// import the router files
 const userRoutes = require("./routes/userRoutes");
 const candidateRoutes = require("./routes/candidateRoutes");
 

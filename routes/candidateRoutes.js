@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/user");
 const Candidate = require("../models/candidate");
-const { jwtAuthMiddleware, generateToken } = require("../jwt");
+const { jwtAuthMiddleware } = require("../jwt");
 
 const checkAdminRole = async (userID) => {
   try {
@@ -25,21 +25,17 @@ router.get("/", async (req, res) => {
   }
 });
 
-// POST route to add a candidate
 router.post("/", jwtAuthMiddleware, async (req, res) => {
   try {
     if (!(await checkAdminRole(req.user.id)))
-      return res.status(403).json({ message: "user does not have admin role" });
+      return res.status(403).json({ message: "User does not have admin role" });
 
-    const data = req.body; // Assuming the request body contains the candidate data
-
-    // Create a new User document using the Mongoose model
+    const data = req.body;
     const newCandidate = new Candidate(data);
-
-    // Save the new user to the database
     const response = await newCandidate.save();
-    console.log("data saved");
-    res.status(200).json({ response: response });
+    res
+      .status(200)
+      .json({ message: "Candidate created successfully", data: response });
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "Internal Server Error" });
@@ -49,10 +45,10 @@ router.post("/", jwtAuthMiddleware, async (req, res) => {
 router.put("/:candidateID", jwtAuthMiddleware, async (req, res) => {
   try {
     if (!checkAdminRole(req.user.id))
-      return res.status(403).json({ message: "user does not have admin role" });
+      return res.status(403).json({ message: "User does not have admin role" });
 
-    const candidateID = req.params.candidateID; // Extract the id from the URL parameter
-    const updatedCandidateData = req.body; // Updated data for the person
+    const candidateID = req.params.candidateID;
+    const updatedCandidateData = req.body;
 
     const response = await Candidate.findByIdAndUpdate(
       candidateID,
@@ -67,8 +63,9 @@ router.put("/:candidateID", jwtAuthMiddleware, async (req, res) => {
       return res.status(404).json({ error: "Candidate not found" });
     }
 
-    console.log("candidate data updated");
-    res.status(200).json(response);
+    res
+      .status(200)
+      .json({ message: "Candidate updated successfully", data: response });
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "Internal Server Error" });
@@ -86,8 +83,9 @@ router.delete("/:candidateID", jwtAuthMiddleware, async (req, res) => {
     if (!response) {
       return res.status(404).json({ error: "Candidate not found." });
     }
-
-    res.status(200).json({ response });
+    res
+      .status(200)
+      .json({ message: "Candidate deleted successfully", data: response });
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "Internal Server Error" });
@@ -137,7 +135,9 @@ router.get("/vote/count", async (req, res) => {
       count: candidate.voteCount,
     }));
 
-    res.status(200).json({ voteRecord });
+    res
+      .status(200)
+      .json({ message: "Vote record fetched successfully", data: voteRecord });
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "Internal Server Error" });
