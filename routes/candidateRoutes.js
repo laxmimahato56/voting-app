@@ -3,6 +3,11 @@ const router = express.Router();
 const User = require("../models/user");
 const Candidate = require("../models/candidate");
 const { jwtAuthMiddleware } = require("../jwt");
+const multer = require("multer");
+
+const storage = multer.memoryStorage();
+
+const upload = multer({ storage });
 
 const checkAdminRole = async (userID) => {
   try {
@@ -25,22 +30,42 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", jwtAuthMiddleware, async (req, res) => {
-  try {
-    if (!(await checkAdminRole(req.user.id)))
-      return res.status(403).json({ message: "User does not have admin role" });
+router.post(
+  "/",
+  jwtAuthMiddleware,
+  upload.single("symbol"),
+  async (req, res) => {
+    try {
+      if (!(await checkAdminRole(req.user.id)))
+        return res
+          .status(403)
+          .json({ message: "User does not have admin role" });
 
-    const data = req.body;
-    const newCandidate = new Candidate(data);
-    const response = await newCandidate.save();
-    res
-      .status(200)
-      .json({ message: "Candidate created successfully", data: response });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: "Internal Server Error" });
+      const { name, party, age } = req.body;
+      const symbolBase64 = req.file ? req.file.buffer.toString("base64") : null;
+
+      const newCandidate = new Candidate({
+        name,
+        party,
+        age,
+        symbol: symbolBase64,
+      });
+      const response = await newCandidate.save();
+      res.status(200).json({
+        message: "Candidate created successfully",
+        data: {
+          name: response.name,
+          party: response.party,
+          age: response.age,
+          symbol: response.symbol,
+        },
+      });
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
   }
-});
+);
 
 router.put("/:candidateID", jwtAuthMiddleware, async (req, res) => {
   try {

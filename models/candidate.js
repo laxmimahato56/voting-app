@@ -13,6 +13,9 @@ const candidateSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  symbol: {
+    type: String,
+  }, // store base64 encoded data
   votes: [
     {
       user: {
