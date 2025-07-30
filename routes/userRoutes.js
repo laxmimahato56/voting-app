@@ -61,7 +61,6 @@ router.put("/profile/password", jwtAuthMiddleware, async (req, res) => {
     const userId = req.user.id;
     const { currentPassword, newPassword } = req.body;
 
-    // Check if currentPassword and newPassword are present in the request body
     if (!currentPassword || !newPassword) {
       return res
         .status(400)
